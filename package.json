@@ -1,9 +1,10 @@
 {
   "name": "swept-bet",
   "version": "1.0.0",
-  "description": "Serverless function for swept.bet Multiplayer Crash",
+  "description": "Multiplayer Crash Game for swept.bet",
   "main": "netlify/functions/crash-game.js",
   "dependencies": {
-    "@solana/web3.js": "^1.78.0"
+    "@solana/web3.js": "^1.78.0",
+    "socket.io": "^4.7.2"
   }
 }
