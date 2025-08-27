@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>swept.bet</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-base@0.9.20/lib/index.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-wallets@0.9.20/lib/index.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@solana/wallet-adapter-react-ui@0.9.20/lib/index.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.78.0/lib/index.iife.min.js"></script>
+</head>
+<body>
+<h1>swept.bet Multiplayer Crash (Beta)</h1>
+<div id="multiplier">Multiplier: 1.00x</div>
+<div>
+  <button id="connectWalletBtn">Connect Wallet</button>
+  <span id="walletAddress"></span>
+</div>
+<div>
+  <input type="number" id="bet" placeholder="Bet Amount (SOL)">
+  <button id="betBtn">Place Bet</button>
+</div>
+<h2>Leaderboard</h2>
+<ul id="leaderboard"></ul>
+<script>
+let userWallet = null;
+const workerUrl = "/.netlify/functions/crash-game";
+
+document.getElementById("connectWalletBtn").addEventListener("click", async () => {
+  if(window.solana && window.solana.isPhantom) {
+    const resp = await window.solana.connect();
+    userWallet = resp.publicKey.toString();
+    document.getElementById("walletAddress").innerText = userWallet;
+  } else {
+    alert("Phantom wallet not found.");
+  }
+});
+
+async function updateMultiplier() {
+  try {
+    const res = await fetch(workerUrl);
+    const data = await res.json();
+    document.getElementById("multiplier").innerText = `Multiplier: ${data.multiplier}x`;
+    const lb = document.getElementById("leaderboard");
+    lb.innerHTML = "";
+    data.leaderboard.forEach(b => {
+      const li = document.createElement("li");
+      li.innerText = `${b.user}: ${b.payout} SOL`;
+      lb.appendChild(li);
+    });
+  } catch(e) {}
+}
+
+document.getElementById("betBtn").addEventListener("click", async () => {
+  if(!userWallet) return alert("Connect wallet first.");
+  const bet = parseFloat(document.getElementById("bet").value);
+  if(!bet) return;
+  try {
+    const res = await fetch(workerUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userPublicKey: userWallet, betAmount: bet })
+    });
+    const data = await res.json();
+    alert(`Your payout: ${data.payout} SOL`);
+  } catch(e) {}
+});
+
+setInterval(updateMultiplier, 500);
+</script>
+</body>
+</html>
